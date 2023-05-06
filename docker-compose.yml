@@ -1,0 +1,38 @@
+services:
+  test-db:
+    image: postgres:13.0
+    expose:
+      - 5432
+    ports:
+      - "3812:5432"
+    volumes:
+      - postgres-test:/var/lib/postgresql/data
+    env_file:
+      - .env.dev
+    networks:
+      - internal_nw_test
+
+  test-api:
+    build:
+      context: ./app
+      target: develop
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+    volumes:
+      - ./app:/opt/project/app
+      - excluded:/opt/project/app/__pycache__
+    env_file:
+      - .env.dev
+    ports:
+      - "3811:8000"
+    networks:
+      - internal_nw_test
+    depends_on:
+      - test-db
+
+networks:
+  internal_nw_test:
+    driver: bridge
+
+volumes:
+  excluded:
+  postgres-test:
