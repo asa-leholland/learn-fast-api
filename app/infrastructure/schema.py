@@ -1,5 +1,6 @@
 from infrastructure.db import Base
 from sqlalchemy import Column, Integer, String, Text
+from infrastructure.db import SessionLocal
 
 # from .db import BaseMixin
 
@@ -13,6 +14,25 @@ class WorkOrderRecord(Base):
 
     def __repr__(self):
         return f"<WorkOrder id={self.id}>"
+
+    def process_routing(self) -> "ProcessRoutingRecord":
+        db = SessionLocal()
+        return db.query(ProcessRoutingRecord).filter_by(
+            id=self.process_routing_id
+        ).first()
+
+    def process_routing_description(self) -> str:
+        return self.process_routing().description
+
+    def item(self) -> "ItemRecord":
+        db = SessionLocal()
+        return db.query(ItemRecord).filter_by(id=self.process_routing().item_id).first()
+
+    def item_number(self) -> str:
+        return self.item().item_number
+
+    def item_description(self) -> str:
+        return self.item().description
 
 
 class ModuleRecord(Base):

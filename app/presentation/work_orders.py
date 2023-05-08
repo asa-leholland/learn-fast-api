@@ -10,7 +10,6 @@ from fastapi import APIRouter, HTTPException, status
 from infrastructure.database import SessionLocal
 from pydantic import BaseModel
 
-from presentation.process_routings import ProcessRoutingDTO
 from presentation.modules import ModuleDTO
 # from presentation.users import UserDTO
 from presentation.items import ItemDTO
@@ -46,21 +45,56 @@ async def create_work_order(module_quantity: int, process_routing_id: int):
     return WorkOrderDTO(id=new_work_order_record.id)
 
 
-# # define an endpoint that returns a list of available routings for new work orders
-# @router.get("/work_orders/", response_model=List[str])
-# async def get_available_routings():
-#     # service = ProcessRoutingApp(ProcessRoutingRecord)
-#     # return service.get_available_routings()
+class WorkOrderListEntryDTO(BaseModel):
+    id: int
+    process_routing_id: int
+    process_routing_description: str
+    item_number: str
+    item_description: str
+    module_quantity: int
+
+    class Config:
+        orm_mode = True
 
 
-#     module_dtos = [
-#         ModuleDTO(serial_number=module) for module in work_order.modules
-#     ]
+class ProcessRoutingDTO(BaseModel):
+    id: int
+    description: str
+    item: ItemDTO
 
-#         WorkOrderDTO(
-#             id=new_work_order.id,
-#             process_routing=process_routing,
-#             modules=module_dtos,
-#         )
+class WorkOrderDTO(BaseModel):
+    id: int
+    process_routing: ProcessRoutingDTO
+    quantity: int
 
-#     return new_work_order
+class AllWorkOrdersDTO(BaseModel):
+    work_orders: List[WorkOrderDTO]
+
+# define an endpoint that returns a list of available routings for new work orders
+@router.get("/work_orders/", response_model=List[WorkOrderListEntryDTO])
+async def get_all_work_orders():
+    service = WorkOrderApp(WorkOrderRecord)
+    work_order_records = service.get_work_orders()
+
+    print(work_order_records)
+
+
+    work_orders = []
+    for work_order in work_order_records:
+        work_orders.append(
+            WorkOrderDTO(
+                id=work_order.id,
+                quantity=work_order.quantity,
+                process_routing=ProcessRoutingDTO(
+                    id=work_order.process_routing.id,
+                    description=work_order.process_routing.description,
+                    item=ItemDTO(
+                        id=work_order.process_routing.item.id,
+                        item_number=work_order.process_routing.item.item_number,
+                        description=work_order.process_routing.item.description,
+                    ),
+                ),
+            )
+        )
+
+    return AllWorkOrdersDTO(work_orders=work_orders)

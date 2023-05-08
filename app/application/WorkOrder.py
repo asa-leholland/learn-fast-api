@@ -5,7 +5,7 @@ from domain.ProcessRouting import ProcessRouting
 from domain.Item import Item
 from infrastructure.db import SessionLocal
 from infrastructure.schema import WorkOrderRecord, ModuleRecord, ItemRecord, ProcessRoutingRecord
-
+from infrastructure.work_orders import get_all_work_orders
 
 class WorkOrderApp:
     def __init__(
@@ -16,6 +16,9 @@ class WorkOrderApp:
         self.work_order_table = work_order_table
         self.process_routing_table = process_routing_table
         self.module_table = module_table
+
+    def get_work_orders(self):
+        return get_all_work_orders()
 
     def create_work_order(self, module_quantity: int, process_routing_id: int) -> WorkOrderRecord:
         if module_quantity < 1:
