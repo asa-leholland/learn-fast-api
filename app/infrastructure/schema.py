@@ -9,6 +9,7 @@ class WorkOrderRecord(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     quantity = Column(Integer)
+    process_routing_id = Column(Integer, nullable=False)
 
     def __repr__(self):
         return f"<WorkOrder id={self.id}>"

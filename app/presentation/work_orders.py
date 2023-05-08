@@ -13,15 +13,13 @@ from pydantic import BaseModel
 from presentation.process_routings import ProcessRoutingDTO
 from presentation.modules import ModuleDTO
 # from presentation.users import UserDTO
-
+from presentation.items import ItemDTO
 
 router = APIRouter()
 
 
 class WorkOrderDTO(BaseModel):
     id: int
-    process_routing: ProcessRoutingDTO
-    modules: List[ModuleDTO]
 
     class Config:
         orm_mode = True
@@ -35,16 +33,17 @@ async def create_work_order(module_quantity: int, process_routing_id: int):
         raise HTTPException(status_code=400, detail="Process routing id must be provided.")
 
     service = WorkOrderApp(
-        work_order_record=WorkOrderRecord,
-        process_routing_record=ProcessRoutingRecord,
-        module_record=ModuleRecord
+        work_order_table=WorkOrderRecord,
+        process_routing_table=ProcessRoutingRecord,
+        module_table=ModuleRecord
         )
 
     try:
-        new_work_order = service.create_work_order(module_quantity, process_routing_id)
+        new_work_order_record = service.create_work_order(module_quantity, process_routing_id)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e)) from e
-    return new_work_order
+
+    return WorkOrderDTO(id=new_work_order_record.id)
 
 
 # # define an endpoint that returns a list of available routings for new work orders
