@@ -7,6 +7,7 @@ services:
       - "3812:5432"
     volumes:
       - postgres-test:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
     env_file:
       - .env.dev
     networks:
@@ -28,6 +29,13 @@ services:
       - internal_nw_test
     depends_on:
       - test-db
+
+  test-adminer:
+    image: adminer
+    ports:
+      - "8080:8080"
+    networks:
+      - internal_nw_test
 
 networks:
   internal_nw_test:

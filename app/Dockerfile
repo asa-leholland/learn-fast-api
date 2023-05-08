@@ -27,19 +27,3 @@ ENV FASTAPI_ENV=development
 
 # Start the FastAPI application using uvicorn
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
-
-
-# Production image/stage
-FROM base AS production
-
-# Set the working directory to /app
-WORKDIR /app
-
-# Copy the entire application to the container
-COPY . .
-
-# Set the environment variable for the production environment
-ENV FASTAPI_ENV=production
-
-# Start the FastAPI application using uvicorn
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
