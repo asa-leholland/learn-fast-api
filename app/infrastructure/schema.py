@@ -37,7 +37,7 @@ class ItemRecord(Base):
 
 
 class ProcessRoutingRecord(Base):
-    __tablename__ = "process_routing"
+    __tablename__ = "process_routings"
 
     id = Column(Integer, primary_key=True, index=True)
     item_id = Column(Integer)

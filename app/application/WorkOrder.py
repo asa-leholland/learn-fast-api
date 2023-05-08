@@ -2,47 +2,41 @@ from typing import List
 
 from domain.WorkOrder import WorkOrder
 from infrastructure.db import SessionLocal
-from infrastructure.schema import WorkOrderRecord, ModuleRecord, ItemRecord
-from dataclasses import dataclass
-
-@dataclass
-class WorkOrderPersistence:
-    work_order_record: WorkOrderRecord
-    module_record: ModuleRecord
-    item_record: ItemRecord
-
-
+from infrastructure.schema import WorkOrderRecord, ModuleRecord, ItemRecord, ProcessRoutingRecord
 
 
 class WorkOrderApp:
-    def __init__(self, persistence: WorkOrderPersistence):
-        self._persistence = persistence
+    def __init__(
+            self,
+            work_order_record=WorkOrderRecord,
+            process_routing_record=ProcessRoutingRecord,
+            module_record=ModuleRecord):
+        self.work_order_record = work_order_record
+        self.process_routing_record = process_routing_record
+        self.module_record = module_record
 
-
-    def create_work_order(self, quantity: int, item_id: int) -> List[str]:
-        if quantity < 1:
+    def create_work_order(self, module_quantity: int, process_routing_id: int) -> WorkOrder:
+        if module_quantity < 1:
             raise ValueError("Quantity must be greater than 0.")
 
-        # read item from db
+        # read process routing from db
         db = SessionLocal()
-        item = db.query(self._persistence.item_record).filter(self._persistence.item_record.id == item_id).first()
-        if not item:
-            raise ValueError("Item not found.")
+        process_routing = db.query(self.process_routing_record).filter(self.process_routing_record.id == process_routing_id).first()
+        if not process_routing:
+            raise ValueError(f"Process Routing with id {process_routing_id} not found.")
 
         # run domain logic
-        work_order = WorkOrder(quantity=quantity, item=item)
-
-        work_order.assign_routing(item.process_routing)
+        work_order = WorkOrder(quantity=module_quantity, item=process_routing.item)
 
         # write work order to db
-        new_work_order = WorkOrderRecord(quantity=10)
-        db.add(new_work_order)
+        new_work_order_record = WorkOrderRecord(quantity=10, process_routing_id=process_routing_id)
+        db.add(new_work_order_record)
         db.commit()
 
         # write modules to db
         for module in work_order.modules:
-            new_module = ModuleRecord(serial_number=module, work_order_id=new_work_order.id)
+            new_module = ModuleRecord(serial_number=module, work_order_id=new_work_order_record.id)
             db.add(new_module)
         db.commit()
 
-        return work_order.serial_numbers
+        return new_work_order_record
